@@ -1,6 +1,6 @@
 # shop_agence
 
-A new Flutter project.
+Aplicación de compras online. Utilizando servicios de geolocalizacion y pasarela de pagos
 
 ## Getting Started
 
