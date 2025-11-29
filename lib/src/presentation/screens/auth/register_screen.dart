@@ -1,108 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/utils/validator_pass.dart';
+import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_button.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_text_form_field.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
-class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterPageState extends ConsumerState<RegisterPage> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passController = TextEditingController();
-  final _confirmPassController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   bool _isLoading = false;
-  //late final RegisterUseCase _registerUseCase;
 
   @override
   void initState() {
     super.initState();
-    //_registerUseCase = sl<RegisterUseCase>();
   }
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _emailController.dispose();
-    _passController.dispose();
-    _confirmPassController.dispose();
+    _addressController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
   Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_passController.text != _confirmPassController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Las contraseñas no coinciden'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
+    setState(() {
+      _isLoading = true;
+    });
+    // signup user using our authmethod
+    String res = await AuthMethod().signupUser(
+      email: _emailController.text,
+      password: _passwordController.text,
+      address: _addressController.text,
+      name: _nameController.text,
+    );
+    if (res == "success") {
+      setState(() {
+        _isLoading = false;
+      });
+      //navigate to the next screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-      return;
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      // show error
+      showSnackBar(context, res);
     }
-
-    setState(() => _isLoading = true);
-
-    // try {
-    //   final username = _usernameController.text.trim().toLowerCase();
-    //   final email = _emailController.text.trim();
-    //   final password = _passController.text.trim();
-
-    //   final success = await _registerUseCase.call(
-    //     username: username,
-    //     email: email,
-    //     password: password,
-    //   );
-
-    //   if (success && mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(
-    //         content: Text('¡Usuario registrado exitosamente!'),
-    //         backgroundColor: Colors.green,
-    //         duration: Duration(seconds: 2),
-    //       ),
-    //     );
-
-    //     await Future.delayed(const Duration(seconds: 1));
-    //     Navigator.pushReplacementNamed(context, 'login');
-    //   }
-    // } catch (e) {
-    //   String errorMessage = 'Error en el registro';
-
-    //   final error = e.toString();
-
-    //   if (error.contains('EMAIL_EXISTS')) {
-    //     errorMessage = 'Este correo electrónico ya está registrado';
-    //   } else if (error.contains('USERNAME_EXISTS')) {
-    //     errorMessage = 'El nombre de usuario ya está en uso';
-    //   } else if (error.contains('REGISTER_ERROR')) {
-    //     errorMessage = 'Ocurrió un error inesperado. Intenta nuevamente.';
-    //   }
-
-    //   if (mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text(errorMessage),
-    //         backgroundColor: Colors.red,
-    //         duration: const Duration(seconds: 3),
-    //       ),
-    //     );
-    //   }
-    // } finally {
-    //   if (mounted) {
-    //     setState(() => _isLoading = false);
-    //   }
-    // }
   }
 
   @override
@@ -126,7 +88,6 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Toggle de tema
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -143,14 +104,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
 
                 Center(
-                  child: Image.asset('assets/shop_agence.png', height: 180),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Center(
-                    child: Text('Shop Agence', style: textStyles.textStyleTitle),
-                  ),
+                  child: Image.asset('assets/agence_shop.png', height: 180),
                 ),
 
                 const SizedBox(height: 16),
@@ -168,17 +122,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: CustomTextField(
-                    controller: _usernameController,
+                    controller: _nameController,
                     isUsername: true,
                     validationMessages: {
                       'required': (_) =>
-                          'El campo usuario no puede estar vacío.',
-                      'invalidUsername': (_) => 'Ingrese un usuario válido.',
+                          'El campo nombre no puede estar vacío.',
+                      'invalidname': (_) => 'Ingrese un nombre válido.',
                     },
-                    label: Text('Usuario', style: textStyles.textStyleLabel),
-                    hintText: 'Ej: ana88',
+                    label: Text('Nombre', style: textStyles.textStyleLabel),
+                    hintText: 'Ej: Ana',
                     prefixIcon: Icon(
-                      Icons.person,
+                      Iconsax.user,
                       color: textStyles.textStyleTitle.color,
                     ),
                     textInputAction: TextInputAction.next,
@@ -208,7 +162,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ),
                     hintText: 'Ej: admin@dominio.com',
                     prefixIcon: Icon(
-                      Icons.email,
+                      Iconsax.sms,
                       color: textStyles.textStyleTitle.color,
                     ),
                     textInputAction: TextInputAction.next,
@@ -225,13 +179,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: CustomObscureText(
-                    controller: _passController,
+                    controller: _passwordController,
                     isPassword: true,
                     validator: PasswordValidator.validatePassword,
                     label: Text('Contraseña', style: textStyles.textStyleLabel),
                     hintText: '****',
                     prefixIcon: Icon(
-                      Icons.lock,
+                      Iconsax.lock,
                       color: textStyles.textStyleTitle.color,
                     ),
                     textInputAction: TextInputAction.next,
@@ -243,31 +197,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
 
                 const SizedBox(height: 16),
-
-                // Confirmación
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: CustomObscureText(
-                    controller: _confirmPassController,
-                    isConfirmPassword: true,
-                    passwordToMatchController: _passController,
-                    validator: (value) =>
-                        PasswordValidator.validateConfirmPassword(
-                          value,
-                          _passController.text,
-                        ),
-                    label: Text(
-                      'Confirmar contraseña',
-                      style: textStyles.textStyleLabel,
-                    ),
-                    hintText: '****',
+                  child: CustomTextField(
+                    controller: _addressController,
+                    validationMessages: {
+                      'required': (_) =>
+                          'El campo dirección no puede estar vacío.',
+                    },
+                    label: Text('Dirección', style: textStyles.textStyleLabel),
+                    hintText: 'Ej: Ana',
                     prefixIcon: Icon(
-                      Icons.lock_outline,
+                      Iconsax.location,
                       color: textStyles.textStyleTitle.color,
                     ),
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.next,
                     textCapitalization: TextCapitalization.none,
-                    keyboardType: TextInputType.visiblePassword,
+                    keyboardType: TextInputType.text,
                     maxLines: 1,
                     textType: TextInputType.text,
                   ),
@@ -283,7 +229,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       : CustomButton(
                           name: 'Registrarse',
                           onTap: _handleRegister,
-                          color: appTheme.pinkColor,
+                          color: AppTheme.secondaryColor,
                         ),
                 ),
 
@@ -295,7 +241,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     onPressed: _isLoading
                         ? null
                         : () {
-                            Navigator.pushNamed(context, 'login');
+                            Navigator.pushNamed(context, '/');
                           },
                     child: Text(
                       '¿Ya tienes cuenta? Inicia sesión',

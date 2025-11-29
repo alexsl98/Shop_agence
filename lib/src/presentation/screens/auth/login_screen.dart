@@ -1,10 +1,17 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/utils/validator_pass.dart';
+import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
+import 'package:shop_agence/src/data/data_source/services/facebook_auth_services.dart';
+import 'package:shop_agence/src/data/data_source/services/google_auth_services.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/screens/home_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_button.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_text_form_field.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -18,13 +25,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
   bool _isLoading = false;
-  //late final LoginUseCase _loginUseCase;
-  // Instancia del DatabaseHelper
+  bool _isGoogleLoading = false;
+  bool _isFacebookLoading = false;
 
   @override
   void initState() {
     super.initState();
-    //_loginUseCase = sl<LoginUseCase>();
   }
 
   @override
@@ -37,27 +43,118 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-    print('Iniciando proceso de login...');
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Aquí va tu lógica de login...
+    String res = await AuthMethod().loginUser(
+      email: _emailController.text,
+      password: _passController.text,
+    );
 
-    setState(() => _isLoading = false);
+    if (res == "success") {
+      setState(() {
+        _isLoading = false;
+      });
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+      showSnackBar(context, res);
+    }
   }
 
-  String _parseErrorMessage(Object e) {
-    final message = e.toString();
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isGoogleLoading = true;
+    });
 
-    if (message.contains('El usuario ya existe')) {
-      return 'Este correo o nombre de usuario ya está registrado.';
+    try {
+      final user = await GoogleAuthServices().signInWithGoogle();
+
+      if (user != null) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡Bienvenido ${user.displayName ?? user.email}!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+        print('Flujo cancelado por el usuario');
+        // No mostramos snackbar porque cancelar es comportamiento normal
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isGoogleLoading = false;
+      });
+      showSnackBar(context, 'Error de autenticación con Firebase');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showSnackBar(context, 'Error al iniciar sesión con Google');
     }
+  }
 
-    if (message.contains('Credenciales incorrectas')) {
-      return 'Correo o contraseña inválidos.';
+  Future<void> _handleFacebookSignIn() async {
+    setState(() {
+      _isFacebookLoading = true;
+    });
+
+    try {
+      final userCredential = await FacebookAuthServices().signInWithFacebook();
+
+      if (userCredential != null) {
+        setState(() {
+          _isFacebookLoading = false;
+        });
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '¡Bienvenido ${userCredential.user ?? userCredential.user ?? 'Usuario'}!',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        setState(() {
+          _isFacebookLoading = false;
+        });
+        print('Flujo cancelado por el usuario');
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isFacebookLoading = false;
+      });
+      showSnackBar(
+        context,
+        'Error de autenticación con Firebase: ${e.message}',
+      );
+    } catch (e) {
+      setState(() {
+        _isFacebookLoading = false;
+      });
+      showSnackBar(context, 'Error al iniciar sesión con Facebook');
     }
-
-    // Mensaje genérico si no se reconoce el error
-    return 'Ocurrió un error inesperado. Intenta nuevamente.';
   }
 
   @override
@@ -93,20 +190,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 Center(
-                  child: Image.asset(
-                    'assets/shop_agence.png',
-                    height: 180,
-                  ),
+                  child: Image.asset('assets/agence_shop.png', height: 180),
                 ),
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Center(
-                    child: Text('Shop Agence', style: textStyles.textStyleTitle),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
                   child: Text(
@@ -116,21 +202,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 const SizedBox(height: 20),
+
+                // Email
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: CustomTextField(
                     controller: _emailController,
                     validationMessages: {
                       'required': (error) =>
-                          'El campo usuario no puede estar vacío.',
+                          'El campo correo no puede estar vacío.',
                     },
                     label: Text(
-                      'Usuario o correo electrónico',
+                      'Correo electrónico',
                       style: textStyles.textStyleLabel,
                     ),
                     hintText: 'Ej: ana/admin@dominio.com',
                     prefixIcon: Icon(
-                      Icons.person,
+                      Iconsax.user,
                       color: textStyles.textStyleTitle.color,
                     ),
                     textInputAction: TextInputAction.next,
@@ -143,6 +231,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 const SizedBox(height: 16),
+
+                // Contraseña
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: CustomObscureText(
@@ -151,7 +241,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     label: Text('Contraseña', style: textStyles.textStyleLabel),
                     hintText: '****',
                     prefixIcon: Icon(
-                      Icons.lock,
+                      Iconsax.lock,
                       color: textStyles.textStyleTitle.color,
                     ),
                     textInputAction: TextInputAction.done,
@@ -164,10 +254,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
 
                 const SizedBox(height: 24),
+
+                // Olvidé contraseña
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        'forgot_password',
+                      );
+                    },
                     child: Text(
                       '¿Olvidaste tu contraseña?',
                       style: textStyles.textStyleSubTitle,
@@ -175,6 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
 
+                // Botón Iniciar Sesión
                 Align(
                   alignment: Alignment.center,
                   child: _isLoading
@@ -182,15 +280,141 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       : CustomButton(
                           name: 'Iniciar sesión',
                           onTap: _handleLogin,
-                          color: appTheme.textSecondaryColor,
+                          color: AppTheme.secondaryColor,
+                        ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Separador "O"
+                Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: textStyles.textStyleSubTitle.color?.withOpacity(
+                          0.3,
+                        ),
+                        thickness: 1,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'O',
+                        style: textStyles.textStyleSubTitle.copyWith(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(
+                        color: textStyles.textStyleSubTitle.color?.withOpacity(
+                          0.3,
+                        ),
+                        thickness: 1,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Botón Google
+                Align(
+                  alignment: Alignment.center,
+                  child: _isGoogleLoading
+                      ? CircularProgressIndicator(color: appTheme.pinkColor)
+                      : ElevatedButton(
+                          onPressed: _handleGoogleSignIn,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
+                            ),
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                'assets/google_icon.png',
+                                height: 24,
+                                width: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Continuar con Google',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                 ),
 
                 const SizedBox(height: 12),
+
+                Align(
+                  alignment: Alignment.center,
+                  child: _isFacebookLoading
+                      ? CircularProgressIndicator(color: appTheme.pinkColor)
+                      : ElevatedButton(
+                          onPressed: () {
+                            _handleFacebookSignIn();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: Colors.grey.shade300,
+                                width: 1,
+                              ),
+                            ),
+                            minimumSize: const Size(double.infinity, 50),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.asset(
+                                'assets/facebook_icon.png',
+                                height: 24,
+                                width: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Continuar con Facebook',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Enlace a Registro
                 Align(
                   alignment: Alignment.center,
                   child: TextButton(
-                    onPressed: _isLoading
+                    onPressed: (_isLoading || _isGoogleLoading)
                         ? null
                         : () {
                             Navigator.pushReplacementNamed(context, 'register');
@@ -198,7 +422,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Text(
                       '¿No tienes cuenta? Regístrate',
                       style: textStyles.textStyleSubTitle.copyWith(
-                        color: _isLoading
+                        color: (_isLoading || _isGoogleLoading)
                             ? Colors.grey
                             : textStyles.textStyleSubTitle.color,
                       ),
