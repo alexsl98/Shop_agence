@@ -1,24 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Importa Firebase Auth
 import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/theme/text_styles.dart';
-import 'package:shop_agence/src/domain/entity/user.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
+import 'package:shop_agence/src/data/data_source/services/google_auth_services.dart';
+import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
 
 class CustomDrawer extends ConsumerWidget {
-  final UserEntity user;
-
-  const CustomDrawer({super.key, required this.user});
+  const CustomDrawer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeProvider);
     final appTheme = AppTheme(isDarkmode: isDarkMode);
 
+    // Obtener el usuario actual de Firebase Auth
+    final User? user = FirebaseAuth.instance.currentUser;
+
     String capitalize(String text) {
       if (text.isEmpty) return text;
       return text[0].toUpperCase() + text.substring(1).toLowerCase();
+    }
+
+    // Obtener el nombre de usuario (displayName o email)
+    String getUsername() {
+      if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+        final names = user.displayName!.split(' ');
+        return names[0]; // Solo el primer nombre
+      } else if (user?.email != null) {
+        // Usar el email sin el dominio como nombre de usuario
+        return user!.email!.split('@')[0];
+      }
+      return 'Usuario';
     }
 
     return Drawer(
@@ -31,15 +47,10 @@ class CustomDrawer extends ConsumerWidget {
               decoration: BoxDecoration(color: appTheme.drawerBackgroundColor),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: appTheme.drawerForegroundColor,
-                child: Text(
-                  user.username!.isNotEmpty
-                      ? user.username![0].toUpperCase()
-                      : '?',
-                  style: textStyleTextConten.copyWith(
-                    color: appTheme.drawerBackgroundColor,
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Icon(
+                  Iconsax.user,
+                  size: 40,
+                  color: appTheme.drawerBackgroundColor,
                 ),
               ),
               otherAccountsPictures: [
@@ -55,7 +66,7 @@ class CustomDrawer extends ConsumerWidget {
                 ),
               ],
               accountName: Text(
-                'Bienvenido, ${capitalize(user.username ?? '')}',
+                'Bienvenido, ${capitalize(getUsername())}',
                 style: textStyleTextConten.copyWith(
                   color: appTheme.drawerForegroundColor,
                 ),
@@ -64,7 +75,7 @@ class CustomDrawer extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               accountEmail: Text(
-                user.email,
+                user?.email ?? 'No hay email',
                 style: textStyleTextConten.copyWith(
                   color: appTheme.drawerForegroundColor,
                 ),
@@ -73,7 +84,6 @@ class CustomDrawer extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            // Todos los ListTiles
             ListTile(
               leading: Icon(
                 Iconsax.home,
@@ -87,7 +97,7 @@ class CustomDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'home', arguments: user);
+                Navigator.pushNamed(context, 'home');
               },
             ),
             ListTile(
@@ -103,7 +113,7 @@ class CustomDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'profile', arguments: user);
+                Navigator.pushNamed(context, 'profile');
               },
             ),
             ListTile(
@@ -119,7 +129,7 @@ class CustomDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'configuracion', arguments: user);
+                Navigator.pushNamed(context, 'configuracion');
               },
             ),
             ListTile(
@@ -135,7 +145,7 @@ class CustomDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'configuracion', arguments: user);
+                Navigator.pushNamed(context, 'configuracion');
               },
             ),
             ListTile(
@@ -181,7 +191,7 @@ class CustomDrawer extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(context); // Cerrar diálogo
               await _performLogout(context);
             },
             child: Text(
@@ -196,26 +206,42 @@ class CustomDrawer extends ConsumerWidget {
 
   Future<void> _performLogout(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    try {
-      //final logoutUseCase = sl<LogoutUseCase>();
-      // await logoutUseCase.call();
 
-      Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // ✅ EJECUTAR AMBOS MÉTODOS DE LOGOUT
+      await AuthMethod().signOut();
+      await GoogleAuthServices().signOut();
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
 
       scaffoldMessenger.showSnackBar(
         const SnackBar(
           content: Text('Sesión cerrada exitosamente'),
           backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
+          duration: Duration(seconds: 2),
         ),
       );
-    } catch (_) {
-      print('Error al cerrar sesión');
+    } catch (e) {
+      print('Error al cerrar sesión: $e');
+
+      // Cerrar el loading si hay error
+      if (context.mounted) {
+        Navigator.of(context).pop(); // Cerrar loading
+      }
+
       scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Hubo un problema al cerrar sesión.'),
+        SnackBar(
+          content: Text('Error al cerrar sesión: $e'),
           backgroundColor: Colors.red,
-          duration: Duration(seconds: 1),
+          duration: const Duration(seconds: 3),
         ),
       );
     }

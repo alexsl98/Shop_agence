@@ -20,6 +20,7 @@ class AppTheme {
   static const Color blueTitle = Color(0xFF2F1BB0);
   static const Color red = Color(0xffB11C1C);
   static const Color platinum = Color(0xfff6f6f6);
+  static const Color green = Color(0xFF34A853);
   static const Color pink = Color(0xFFFF6F61);
   static const Color pinkClaro = Color(0xFFFF8B78);
   static const Color pinkDark = Color(0xFFCC554D);
@@ -47,7 +48,7 @@ class AppTheme {
 
   // COLORES ESPECÍFICOS PARA EL DRAWER
   static const Color lightDrawerBackground = Color(
-    0xFFFF6F61,
+    0xFF34A853,
   ); // Pink para tema claro
   static const Color darkDrawerBackground = Color(
     0xFF000000,
@@ -74,7 +75,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      primaryColor: pink, 
+      primaryColor: green, 
       scaffoldBackgroundColor: lightScaffoldBackground,
       cardColor: lightCardColor,
       dialogBackgroundColor: lightDialogBackground,
@@ -91,7 +92,7 @@ class AppTheme {
         onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: pink,
+        backgroundColor: green,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
@@ -161,7 +162,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: pink,
+          backgroundColor: green,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           shape: RoundedRectangleBorder(
@@ -187,7 +188,7 @@ class AppTheme {
           borderSide: const BorderSide(
             color: pink,
             width: 2,
-          ), // ✅ Pink para borde
+          ), 
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -381,8 +382,8 @@ class AppTheme {
   Color get blueColor => isDarkmode ? blueForDarkMode : blue;
 
   //  NUEVO: Color para AppBar y FAB
-  Color get appBarColor => isDarkmode ? darkGrey : pink;
-  Color get fabColor => isDarkmode ? black : pink;
+  Color get appBarColor => isDarkmode ? darkGrey : green;
+  Color get fabColor => isDarkmode ? black : green;
 
   //  MÉTODOS PARA EL DRAWER
   Color get drawerBackgroundColor =>

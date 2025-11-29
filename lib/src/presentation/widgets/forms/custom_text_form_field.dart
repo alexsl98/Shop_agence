@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/theme/colors.dart';
 import 'package:shop_agence/src/core/theme/text_styles.dart' as textStyles;
 import 'package:shop_agence/src/core/utils/regex_validation.dart';
@@ -85,8 +87,8 @@ class CustomTextField extends StatelessWidget {
         }
 
         if (isUsername && !RegExp(RegExpUtil.usernameRegExp).hasMatch(value)) {
-          return validationMessages?['invalidUsername']?.call(value) ??
-              'Nombre de usuario inválido. Usa letras, números, puntos o guiones bajos. Debe comenzar con una letra.';
+          return validationMessages?['invalidname']?.call(value) ??
+              'Nombre de nombre inválido. Usa letras, números, puntos o guiones bajos. Debe comenzar con una letra.';
         }
 
         if (isEmail && !RegExp(RegExpUtil.emailRegExp).hasMatch(value)) {
@@ -275,8 +277,8 @@ class _CustomObscureTextState extends State<CustomObscureText> {
         filled: true,
         suffixIcon: IconButton(
           icon: Icon(
-            _isObscured ? Icons.visibility : Icons.visibility_off,
-            color: widget.suffixIconColor ?? textStyles.textStyleTitle.color,
+            _isObscured ? Iconsax.eye_slash : Iconsax.eye,
+            color: widget.suffixIconColor ?? AppTheme.secondaryColor,
           ),
           onPressed: _toggleObscureText,
         ),

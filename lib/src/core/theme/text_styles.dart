@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/theme/colors.dart';
 import 'package:shop_agence/src/core/theme/dimensions.dart';
 
@@ -44,7 +45,7 @@ const TextStyle textStyleButton = TextStyle(
 final TextStyle textStyleTitle = GoogleFonts.poppins(
   fontSize: 72,
   fontWeight: FontWeight.w900,
-  color: const Color(0xFF2F1BB0),
+  color: AppTheme.secondaryColor,
 );
 final TextStyle textStyleSubTitle = GoogleFonts.aBeeZee(
   fontSize: 15,
@@ -72,7 +73,7 @@ final TextStyle textStyleTitleDrawer = GoogleFonts.poppins(
   color: AppColors.platinum,
 );
 final TextStyle textStyleTextConten = GoogleFonts.aBeeZee(
-  fontSize: 18,
+  fontSize: 16,
   fontWeight: FontWeight.bold,
   color: AppColors.platinum,
 );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/theme/colors.dart';
 import 'package:shop_agence/src/core/theme/dimensions.dart';
 
@@ -15,21 +16,21 @@ class AdaptiveTextStyles {
 
   // Textos que mantienen su color en claro y son blancos en oscuro
   TextStyle get textStyleTitle => GoogleFonts.poppins(
-    fontSize: 72,
+    fontSize: 40,
     fontWeight: FontWeight.w900,
-    color: _adaptiveColor(const Color(0xFF2F1BB0)),
+    color: _adaptiveColor(AppTheme.secondaryColor),
   );
 
   TextStyle get textStyleSubTitle => GoogleFonts.aBeeZee(
     fontSize: 15,
     fontWeight: FontWeight.w800,
-    color: _adaptiveColor(const Color(0xFF1881BE)),
+    color: _adaptiveColor(AppTheme.secondaryColor),
   );
 
   TextStyle get textStyleSubTitleBold => GoogleFonts.aBeeZee(
     fontSize: 50,
     fontWeight: FontWeight.w900,
-    color: _adaptiveColor(const Color.fromARGB(255, 13, 75, 111)),
+    color: _adaptiveColor(AppTheme.secondaryColor),
   );
 
   TextStyle get textStyleCancelText => GoogleFonts.aBeeZee(

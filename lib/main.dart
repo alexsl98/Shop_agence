@@ -6,6 +6,7 @@ import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
+import 'package:shop_agence/src/presentation/screens/auth/register_screen.dart';
 import 'package:shop_agence/src/presentation/screens/home_screen.dart';
 
 void main() async {
@@ -44,8 +45,9 @@ class _MyAppState extends ConsumerState<MyApp> {
       initialRoute: '/',
       routes: {
         '/': (context) => LoginScreen(),
-        '/home': (context) => HomeScreen(),
-        '/forgot_password': (context) => ForgotPasswordScreen(),
+        'register': (context) => RegisterScreen(),
+        'home': (context) => HomeScreen(),
+        'forgot_password': (context) => ForgotPasswordScreen(),
       },
     );
   }
