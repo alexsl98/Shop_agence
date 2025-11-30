@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:shop_agence/src/data/models/product_model.dart';
+import 'package:shop_agence/src/data/models/purchase_model.dart';
 
 class CartItem {
   final ProductModel product;
@@ -13,19 +14,13 @@ class CartItem {
 
   double get totalPrice => product.price * quantity;
 
-  // Métodos para serialización compatibles con tu ProductModel
   Map<String, dynamic> toMap() {
-    return {
-      'product': product.toJson(), // Usa toJson() de tu ProductModel
-      'quantity': quantity,
-    };
+    return {'product': product.toJson(), 'quantity': quantity};
   }
 
   factory CartItem.fromMap(Map<String, dynamic> map) {
     return CartItem(
-      product: ProductModel.fromJson(
-        map['product'],
-      ), // Usa fromJson() de tu ProductModel
+      product: ProductModel.fromJson(map['product']),
       quantity: map['quantity'] ?? 1,
     );
   }
@@ -39,7 +34,7 @@ final cartItemsProvider = StateNotifierProvider<CartNotifier, List<CartItem>>((
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
   CartNotifier() : super([]) {
-    _loadCartFromPrefs(); // Cargar datos al iniciar
+    _loadCartFromPrefs();
   }
 
   static const String _cartKey = 'shopping_cart';
@@ -64,7 +59,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       }
     } catch (e) {
       debugPrint('Error cargando carrito: $e');
-      state = []; // En caso de error, empezar con carrito vacío
+      state = [];
     }
   }
 
@@ -80,29 +75,38 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     }
   }
 
+  // Método para realizar checkout y crear una compra
+  PurchaseModel checkout() {
+    if (state.isEmpty) {
+      throw Exception('El carrito está vacío');
+    }
+
+    final purchase = PurchaseModel.fromCart(
+      userId: 'current_user', //ID fijo por ahora
+      cartItems: List.from(state), // Copia de los items actuales
+    );
+
+    // Limpiar el carrito después del checkout
+    clearCart();
+
+    return purchase;
+  }
+
   void addProduct(ProductModel product) {
     final index = state.indexWhere((item) => item.product.id == product.id);
 
     if (index != -1) {
       state = state.map((item) {
         if (item.product.id == product.id) {
-          debugPrint(
-            'Producto existente, nueva cantidad: ${item.quantity + 1}',
-          );
           return CartItem(product: item.product, quantity: item.quantity + 1);
         }
         return item;
       }).toList();
     } else {
-      debugPrint('Nuevo producto añadido: ${product.title}');
       state = [...state, CartItem(product: product)];
     }
 
-    debugPrint(
-      'Estado final: ${state.length} productos, ${state.fold(0, (sum, item) => sum + item.quantity)} items total',
-    );
-
-    _saveCartToPrefs(); // Guardar después del cambio
+    _saveCartToPrefs();
   }
 
   void removeProduct(int productId) {
@@ -130,16 +134,15 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     debugPrint(
       'Producto removido: $productName, productos restantes: ${state.length}',
     );
-    _saveCartToPrefs(); // Guardar después del cambio
+    _saveCartToPrefs();
   }
 
   void updateQuantity(int productId, int newQuantity) {
-    if (newQuantity <= 0) {
-      removeProduct(productId);
+    if (newQuantity < 1) {
       return;
     }
 
-    final productName = state
+    state
         .firstWhere(
           (item) => item.product.id == productId,
           orElse: () => CartItem(
@@ -161,19 +164,17 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
     state = state.map((item) {
       if (item.product.id == productId) {
-        debugPrint('Cantidad actualizada: $productName -> $newQuantity');
         return CartItem(product: item.product, quantity: newQuantity);
       }
       return item;
     }).toList();
 
-    _saveCartToPrefs(); // Guardar después del cambio
+    _saveCartToPrefs();
   }
 
   void clearCart() {
     state = [];
-    debugPrint('Carrito vaciado completamente');
-    _saveCartToPrefs(); // Guardar después del cambio
+    _saveCartToPrefs();
   }
 
   // Métodos adicionales útiles
@@ -209,7 +210,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     return item.quantity;
   }
 
-  // Método para obtener un producto específico del carrito
   ProductModel? getProductById(int productId) {
     try {
       return state.firstWhere((item) => item.product.id == productId).product;
