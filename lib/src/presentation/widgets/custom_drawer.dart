@@ -129,7 +129,7 @@ class CustomDrawer extends ConsumerWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'configuracion');
+                Navigator.pushNamed(context, 'mis_productos');
               },
             ),
             ListTile(

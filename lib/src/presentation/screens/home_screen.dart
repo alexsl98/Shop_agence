@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/data/data_source/services/product_services.dart';
+import 'package:shop_agence/src/data/models/product_model.dart';
+import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
+import 'package:shop_agence/src/presentation/widgets/custom_badges.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_shimmer.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final ProductService _productService = ProductService();
   final ScrollController _scrollController = ScrollController();
 
@@ -60,10 +64,46 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _showAddToCartSnackBar(ProductModel product) {
+    // Verificar el estado actual ANTES de añadir
+    final cartBefore = ref.read(cartItemsProvider);
+    debugPrint('Carrito antes: ${cartBefore.length} items');
+
+    // Añadir el producto
+    ref.read(cartItemsProvider.notifier).addProduct(product);
+
+    // Verificar el estado DESPUÉS de añadir
+    final cartAfter = ref.read(cartItemsProvider);
+    debugPrint('Carrito después: ${cartAfter.length} items');
+
+    // Verificar el cartCountProvider específicamente
+    final countAfter = ref.read(cartCountProvider);
+    debugPrint('cartCountProvider: $countAfter');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '¡Producto añadido al carrito exitosamente!',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    
-
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
@@ -73,18 +113,31 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.shopping_cart_outlined,
-                color: AppTheme.secondaryColor,
-              ),
-            ),
+          Consumer(
+            builder: (context, ref, child) {
+              final cartCount = ref.watch(cartCountProvider);
+              print('Cart count: $cartCount'); // Debug
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: CartBadge(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, 'notification_cart');
+                      },
+                      icon: Icon(
+                        Iconsax.shopping_cart,
+                        color: AppTheme.secondaryColor,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
         title: const Text("Home"),
@@ -170,7 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                _showAddToCartSnackBar(item);
+                              },
                               icon: Icon(
                                 Icons.add_shopping_cart,
                                 color: AppTheme.secondaryColor,

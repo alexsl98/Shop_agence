@@ -48,6 +48,7 @@ dependencies:
   flutter_facebook_auth: ^6.0.0
   http: ^1.6.0
   shimmer: ^3.0.0
+  badges: ^3.1.2
 
 dev_dependencies:
   flutter_test:
