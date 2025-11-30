@@ -31,6 +31,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
@@ -40,8 +41,23 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+    
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Dependencia para Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    
+    // Para apps con muchas dependencias (opcional)
+    implementation("androidx.multidex:multidex:2.0.1")
+    
+    // Firebase BoM (si usas Firebase)
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
 }
