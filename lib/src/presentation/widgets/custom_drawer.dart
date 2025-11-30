@@ -122,14 +122,14 @@ class CustomDrawer extends ConsumerWidget {
                 color: appTheme.drawerForegroundColor,
               ),
               title: Text(
-                'Mis productos',
+                'Mis compras',
                 style: textDrawer.copyWith(
                   color: appTheme.drawerForegroundColor,
                 ),
               ),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, 'mis_productos');
+                Navigator.pushNamed(context, 'mis_compras');
               },
             ),
             ListTile(

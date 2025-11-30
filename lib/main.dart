@@ -7,6 +7,7 @@ import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provi
 import 'package:shop_agence/src/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/register_screen.dart';
+import 'package:shop_agence/src/presentation/screens/my_purchase_screen.dart';
 import 'package:shop_agence/src/presentation/screens/home_screen.dart';
 import 'package:shop_agence/src/presentation/screens/notification_screen.dart';
 
@@ -51,6 +52,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         'home': (context) => HomeScreen(),
         'forgot_password': (context) => ForgotPasswordScreen(),
         'notification_cart': (context) => const NotificationScreen(),
+        'mis_compras': (context)=> MyPurchasesScreen()
       },
     );
   }

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
+import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/data/data_source/services/product_services.dart';
 import 'package:shop_agence/src/data/models/product_model.dart';
 import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
+import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_badges.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_shimmer.dart';
@@ -104,6 +106,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ref.watch(themeProvider);
+    final appTheme = AppTheme(isDarkmode: isDarkMode);
     return Scaffold(
       appBar: AppBar(
         leading: Builder(
@@ -116,7 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Consumer(
             builder: (context, ref, child) {
               final cartCount = ref.watch(cartCountProvider);
-              print('Cart count: $cartCount'); // Debug
+              print('Cart count: $cartCount');
               return Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: CartBadge(
@@ -140,7 +144,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
-        title: const Text("Home"),
+        title: Text(
+          "Home",
+          style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+        ),
       ),
       drawer: const CustomDrawer(),
 
