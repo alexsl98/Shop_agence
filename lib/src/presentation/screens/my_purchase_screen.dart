@@ -13,7 +13,7 @@ class MyPurchasesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-     final isDarkMode = ref.watch(themeProvider);
+    final isDarkMode = ref.watch(themeProvider);
     final appTheme = AppTheme(isDarkmode: isDarkMode);
     final purchases = ref.watch(purchasesProvider);
     final sortedPurchases = ref
@@ -28,9 +28,10 @@ class MyPurchasesScreen extends ConsumerWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title:  Text('Mis Compras',style: textAppBar.copyWith(
-                  color: appTheme.drawerForegroundColor,
-                ),),
+        title: Text(
+          'Mis Compras',
+          style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+        ),
         actions: [
           if (sortedPurchases.isNotEmpty)
             IconButton(

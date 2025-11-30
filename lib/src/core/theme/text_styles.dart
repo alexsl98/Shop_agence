@@ -78,7 +78,7 @@ final TextStyle textStyleTextConten = GoogleFonts.aBeeZee(
   color: AppColors.platinum,
 );
 final TextStyle textAppBar = GoogleFonts.aBeeZee(
-  fontSize: 24,
+  fontSize: 20,
   fontWeight: FontWeight.bold,
   color: AppColors.platinum,
 );

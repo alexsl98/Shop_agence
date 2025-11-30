@@ -7,7 +7,9 @@ import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provi
 import 'package:shop_agence/src/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/register_screen.dart';
+import 'package:shop_agence/src/presentation/screens/my_purchase_screen.dart';
 import 'package:shop_agence/src/presentation/screens/home_screen.dart';
+import 'package:shop_agence/src/presentation/screens/notification_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,14 +42,17 @@ class _MyAppState extends ConsumerState<MyApp> {
     print('Iniciando app con tema: ${darkMode ? 'Oscuro' : 'Claro'}');
 
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: AppTheme(isDarkmode: darkMode).getTheme(),
-      title: 'Finanzi',
+      title: 'Agence Shop',
       initialRoute: '/',
       routes: {
         '/': (context) => LoginScreen(),
         'register': (context) => RegisterScreen(),
         'home': (context) => HomeScreen(),
         'forgot_password': (context) => ForgotPasswordScreen(),
+        'notification_cart': (context) => const NotificationScreen(),
+        'mis_compras': (context)=> MyPurchasesScreen()
       },
     );
   }
