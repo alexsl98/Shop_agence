@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shop_agence/src/data/data_source/services/session_manager_services.dart';
 
 class GoogleAuthServices {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
@@ -34,6 +35,11 @@ class GoogleAuthServices {
         credential,
       );
 
+      // Guardar timestamp del login
+      if (userCredential.user != null) {
+        await SessionManager.saveLoginTimestamp(userCredential.user!.uid);
+      }
+
       print('Login exitoso: ${userCredential.user?.email}');
       return userCredential.user;
     } catch (error) {
@@ -45,6 +51,7 @@ class GoogleAuthServices {
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
+    await SessionManager.clearSessionData();
     print('Sesión cerrada exitosamente');
   }
 }
