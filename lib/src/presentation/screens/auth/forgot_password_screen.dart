@@ -1,10 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
-import 'package:shop_agence/src/core/theme/text_styles.dart' as textStyles;
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_button.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_text_form_field.dart';
@@ -49,19 +47,22 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         _isLoading = false;
       });
 
-      AlertDialog(
-        title: const Text('Correo enviado'),
-        content: const Text(
-          'Se ha enviado un correo electrónico para restablecer tu contraseña. Revisa tu bandeja de entrada.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('Aceptar'),
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Correo enviado'),
+          content: const Text(
+            'Se ha enviado un correo electrónico para restablecer tu contraseña. Revisa tu bandeja de entrada.',
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
       );
     } catch (error) {
       setState(() {
@@ -94,6 +95,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final isDarkMode = ref.watch(themeProvider);
     final appTheme = AppTheme(isDarkmode: isDarkMode);
+    final textStyles = appTheme.textStyles;
     return Scaffold(
       backgroundColor: appTheme.scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -163,7 +165,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                     textType: TextInputType.text,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
                 Align(
                   alignment: Alignment.center,
                   child: _isLoading
