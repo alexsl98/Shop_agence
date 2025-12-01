@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shop_agence/firebase_options.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
+import 'package:shop_agence/src/presentation/provider/auth_session_provider/auth_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
@@ -45,9 +46,11 @@ class _MyAppState extends ConsumerState<MyApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme(isDarkmode: darkMode).getTheme(),
       title: 'Agence Shop',
-      initialRoute: '/',
+      home: AuthWrapper(
+        signedInWidget: HomeScreen(),
+        signedOutWidget: LoginScreen(),
+      ),
       routes: {
-        '/': (context) => LoginScreen(),
         'register': (context) => RegisterScreen(),
         'home': (context) => HomeScreen(),
         'forgot_password': (context) => ForgotPasswordScreen(),
