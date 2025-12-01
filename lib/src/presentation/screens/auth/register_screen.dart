@@ -58,12 +58,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
+      showSnackBar(
+        context,
+        'Usuario registrado exitosamente',
+        type: SnackBarType.success,
+      );
     } else {
       setState(() {
         _isLoading = false;
       });
       // show error
-      showSnackBar(context, res);
+      showSnackBar(
+        context,
+        'Ocurrio un error inesperado. Revise su conexión e intente nuevamente.',
+        type: SnackBarType.error,
+      );
     }
   }
 

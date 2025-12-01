@@ -87,7 +87,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         }
       }
 
-      showSnackBar(context, errorMessage);
+      showSnackBar(context, errorMessage, type: SnackBarType.warning);
     }
   }
 

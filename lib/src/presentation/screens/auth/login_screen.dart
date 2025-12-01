@@ -63,7 +63,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       setState(() {
         _isLoading = false;
       });
-      showSnackBar(context, res);
+      showSnackBar(context, res, type: SnackBarType.error);
     }
   }
 
@@ -83,30 +83,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('¡Bienvenido ${user.displayName ?? user.email}!'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
+        showSnackBar(
+          context,
+          '¡Bienvenido ${user.displayName ?? user.email}!',
+          type: SnackBarType.success,
         );
       } else {
         setState(() {
           _isGoogleLoading = false;
         });
         print('Flujo cancelado por el usuario');
-        // No mostramos snackbar porque cancelar es comportamiento normal
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isGoogleLoading = false;
       });
-      showSnackBar(context, 'Error de autenticación con Firebase');
+      showSnackBar(
+        context,
+        'Ocurrio un error inesperado. Revise su conexión e intente nuevamente.',
+        type: SnackBarType.error,
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      showSnackBar(context, 'Error al iniciar sesión con Google');
+      showSnackBar(
+        context,
+        'Error al iniciar sesión con Google',
+        type: SnackBarType.error,
+      );
     }
   }
 
@@ -126,14 +131,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '¡Bienvenido ${userCredential.user ?? userCredential.user ?? 'Usuario'}!',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
+        showSnackBar(
+          context,
+          '¡Bienvenido ${userCredential.user ?? userCredential.credential}!',
+          type: SnackBarType.success,
         );
       } else {
         setState(() {
@@ -147,13 +148,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
       showSnackBar(
         context,
-        'Error de autenticación con Firebase: ${e.message}',
+        'Error de autenticación con Firebase',
+        type: SnackBarType.error
       );
     } catch (e) {
       setState(() {
         _isFacebookLoading = false;
       });
-      showSnackBar(context, 'Error al iniciar sesión con Facebook');
+      showSnackBar(
+        context,
+        'Error al iniciar sesión con Facebook',
+        type: SnackBarType.error,
+      );
     }
   }
 
@@ -260,10 +266,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        'forgot_password',
-                      );
+                      Navigator.pushNamed(context, 'forgot_password');
                     },
                     child: Text(
                       '¿Olvidaste tu contraseña?',

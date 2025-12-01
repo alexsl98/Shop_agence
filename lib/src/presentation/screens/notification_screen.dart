@@ -6,6 +6,7 @@ import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class NotificationScreen extends ConsumerWidget {
   const NotificationScreen({super.key});
@@ -374,42 +375,30 @@ class NotificationScreen extends ConsumerWidget {
   }
 
   void _showCheckoutErrorSnackBar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Error al procesar la compra. Intenta nuevamente.'),
-        backgroundColor: Colors.red,
-        duration: Duration(seconds: 3),
-      ),
+    showSnackBar(
+      context,
+      'Error al procesar la compra. Intenta nuevamente.',
+      type: SnackBarType.error,
     );
   }
 
   void _showRemovedSnackBar(BuildContext context, String productName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$productName removido del carrito'),
-        backgroundColor: Colors.orange,
-        duration: const Duration(seconds: 2),
-      ),
+    showSnackBar(
+      context,
+      '$productName removido del carrito',
+      type: SnackBarType.warning,
     );
   }
 
   void _showClearedSnackBar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Carrito vaciado'),
-        backgroundColor: Colors.orange,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    showSnackBar(context, 'Carrito vaciado', type: SnackBarType.warning);
   }
 
   void _showOrderConfirmedSnackBar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('¡Pedido confirmado! Gracias por tu compra.'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 3),
-      ),
+    showSnackBar(
+      context,
+      '¡Pedido confirmado! Gracias por tu compra.',
+      type: SnackBarType.success,
     );
   }
 }

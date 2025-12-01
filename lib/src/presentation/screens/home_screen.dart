@@ -10,6 +10,7 @@ import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provi
 import 'package:shop_agence/src/presentation/widgets/custom_badges.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_shimmer.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -82,26 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final countAfter = ref.read(cartCountProvider);
     debugPrint('cartCountProvider: $countAfter');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                '¡Producto añadido al carrito exitosamente!',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-    );
+   showSnackBar(context, 'Producto añadido al carrito exitosamente', type: SnackBarType.success);
   }
 
   @override

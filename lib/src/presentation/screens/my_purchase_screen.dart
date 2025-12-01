@@ -7,6 +7,7 @@ import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/data/models/purchase_model.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
 
 class MyPurchasesScreen extends ConsumerWidget {
   const MyPurchasesScreen({super.key});
@@ -43,6 +44,7 @@ class MyPurchasesScreen extends ConsumerWidget {
             ),
         ],
       ),
+      drawer: CustomDrawer(),
       body: sortedPurchases.isEmpty
           ? _buildEmptyPurchases(context)
           : _buildPurchasesList(sortedPurchases, ref),
