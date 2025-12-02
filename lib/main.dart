@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shop_agence/firebase_options.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/presentation/provider/auth_session_provider/auth_provider.dart';
+import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
@@ -39,6 +40,7 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    ref.read(cartAuthObserverProvider);
     final darkMode = ref.watch(themeProvider);
     print('Iniciando app con tema: ${darkMode ? 'Oscuro' : 'Claro'}');
 
@@ -55,7 +57,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         'home': (context) => HomeScreen(),
         'forgot_password': (context) => ForgotPasswordScreen(),
         'notification_cart': (context) => const NotificationScreen(),
-        'mis_compras': (context)=> MyPurchasesScreen()
+        'mis_compras': (context) => MyPurchasesScreen(),
       },
     );
   }
