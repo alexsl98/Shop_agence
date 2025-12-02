@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -5,9 +6,10 @@ import 'package:intl/intl.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/data/models/purchase_model.dart';
-import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
+import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart'; // Actualizado
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class MyPurchasesScreen extends ConsumerWidget {
   const MyPurchasesScreen({super.key});
@@ -16,10 +18,7 @@ class MyPurchasesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeProvider);
     final appTheme = AppTheme(isDarkmode: isDarkMode);
-    final purchases = ref.watch(purchasesProvider);
-    final sortedPurchases = ref
-        .read(purchasesProvider.notifier)
-        .sortedPurchases;
+    final purchasesAsync = ref.watch(userPurchasesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -29,29 +28,91 @@ class MyPurchasesScreen extends ConsumerWidget {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title: Text(
-          'Mis Compras',
-          style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+        title: Row(
+          children: [
+            Text(
+              'Mis Compras',
+              style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+            ),
+          ],
         ),
         actions: [
-          if (sortedPurchases.isNotEmpty)
-            IconButton(
-              icon: const Icon(Iconsax.receipt_discount),
-              onPressed: () {
-                _showPurchaseSummary(context, ref);
-              },
-              tooltip: 'Resumen de compras',
-            ),
+          IconButton(
+            icon: const Icon(Iconsax.receipt_discount),
+            onPressed: () {
+              _showPurchaseSummary(context, ref);
+            },
+            tooltip: 'Resumen de compras',
+          ),
         ],
       ),
-      drawer: CustomDrawer(),
-      body: sortedPurchases.isEmpty
-          ? _buildEmptyPurchases(context)
-          : _buildPurchasesList(sortedPurchases, ref),
+      drawer: const CustomDrawer(),
+      body: purchasesAsync.when(
+        loading: () => _buildLoadingState(),
+        error: (error, stack) =>
+            _buildErrorState(context, ref, error.toString()), 
+        data: (purchases) {
+          if (purchases.isEmpty) {
+            return _buildEmptyPurchases(context);
+          }
+          return _buildPurchasesList(purchases, ref);
+        },
+      ),
     );
   }
 
-  Widget _buildEmptyPurchases(context) {
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 16),
+          Text('Cargando tus compras...'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, WidgetRef ref, String error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Iconsax.warning_2, size: 80, color: Colors.red),
+          const SizedBox(height: 20),
+          const Text(
+            'Error al cargar compras',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              error,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Recargar
+              ref.invalidate(userPurchasesProvider);
+            },
+            icon: const Icon(Iconsax.refresh),
+            label: const Text('Reintentar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyPurchases(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -68,7 +129,7 @@ class MyPurchasesScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+            padding: EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               'Realiza tu primera compra y aparecerá aquí',
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
@@ -93,7 +154,16 @@ class MyPurchasesScreen extends ConsumerWidget {
   }
 
   Widget _buildPurchasesList(List<PurchaseModel> purchases, WidgetRef ref) {
-    final totalSpent = ref.read(purchasesProvider.notifier).totalSpent;
+    // Calcular totales
+    final totalSpent = purchases.fold(
+      0.0,
+      (sum, purchase) => sum + purchase.totalPrice,
+    );
+
+    final totalItems = purchases.fold(
+      0,
+      (sum, purchase) => sum + purchase.items.length,
+    );
 
     return Column(
       children: [
@@ -385,53 +455,60 @@ class MyPurchasesScreen extends ConsumerWidget {
     }
   }
 
-  void _showPurchaseSummary(BuildContext context, WidgetRef ref) {
-    final purchases = ref.read(purchasesProvider);
-    final totalSpent = ref.read(purchasesProvider.notifier).totalSpent;
-    final totalItems = purchases.fold(
-      0,
-      (sum, purchase) => sum + purchase.items.length,
-    );
+  Future<void> _showPurchaseSummary(BuildContext context, WidgetRef ref) async {
+    final purchaseService = ref.read(purchaseServiceProvider);
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Resumen de Compras'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSummaryItem('Total de compras:', purchases.length.toString()),
-            _buildSummaryItem('Productos comprados:', totalItems.toString()),
-            _buildSummaryItem(
-              'Total gastado:',
-              '\$${totalSpent.toStringAsFixed(2)}',
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(8),
+    try {
+      final stats = await purchaseService.getUserPurchaseStats();
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Resumen de Compras'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSummaryItem(
+                'Total de compras:',
+                stats.totalPurchases.toString(),
               ),
-              child: Text(
-                '¡Gracias por tus compras!',
-                style: TextStyle(
-                  color: Colors.green[700],
-                  fontWeight: FontWeight.bold,
+              _buildSummaryItem(
+                'Productos comprados:',
+                stats.totalItems.toString(),
+              ),
+              _buildSummaryItem(
+                'Total gastado:',
+                '\$${stats.totalSpent.toStringAsFixed(2)}',
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '¡Gracias por tus compras!',
+                  style: TextStyle(
+                    color: Colors.green[700],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      showSnackBar(context, 'Error al cargar estadísticas', type: SnackBarType.error);
+    }
   }
 
   Widget _buildSummaryItem(String label, String value) {
