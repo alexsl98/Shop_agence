@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -6,6 +7,7 @@ import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/screens/my_purchase_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class NotificationScreen extends ConsumerWidget {
@@ -80,150 +82,144 @@ class NotificationScreen extends ConsumerWidget {
       itemCount: cartItems.length,
       itemBuilder: (context, index) {
         final item = cartItems[index];
-        return _buildCartItem(item, cartNotifier, context, ref);
-      },
-    );
-  }
-
-  Widget _buildCartItem(
-    CartItem item,
-    CartNotifier cartNotifier,
-    BuildContext context,
-    WidgetRef ref,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Imagen del producto
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                item.product.image,
-                width: 60,
-                height: 90,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 60,
-                  height: 90,
-                  color: Colors.grey[200],
-                  child: const Icon(Iconsax.gallery_slash, color: Colors.grey),
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // Imagen del producto
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    item.product.image,
+                    width: 60,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 60,
+                      height: 90,
+                      color: Colors.grey[200],
+                      child: const Icon(
+                        Iconsax.gallery_slash,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-            // Información del producto
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.product.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      fontSize: 14,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '\$${item.product.price.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.secondaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    item.product.description,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  // Controles de cantidad
-                  Row(
+                // Información del producto
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Botón decrementar
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(16),
+                      Text(
+                        item.product.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 14,
                         ),
-                        child: IconButton(
-                          icon: const Icon(Iconsax.minus, size: 18),
-                          onPressed: () {
-                            cartNotifier.updateQuantity(
-                              item.product.id,
-                              item.quantity - 1,
-                            );
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '\$${item.product.price.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.secondaryColor,
                         ),
                       ),
-
-                      // Cantidad
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          item.quantity.toString(),
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                      const SizedBox(height: 4),
+                      Text(
+                        item.product.description,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      // Controles de cantidad
+                      Row(
+                        children: [
+                          // Botón decrementar
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryColor.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Iconsax.minus, size: 18),
+                              onPressed: () {
+                                cartNotifier.updateQuantity(
+                                  item.product.id,
+                                  item.quantity - 1,
+                                );
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           ),
-                        ),
-                      ),
 
-                      // Botón incrementar
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.secondaryColor.withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Iconsax.add, size: 18),
-                          onPressed: () {
-                            cartNotifier.updateQuantity(
-                              item.product.id,
-                              item.quantity + 1,
-                            );
-                          },
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
-                        ),
+                          // Cantidad
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              item.quantity.toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+
+                          // Botón incrementar
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.secondaryColor.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Iconsax.add, size: 18),
+                              onPressed: () {
+                                cartNotifier.updateQuantity(
+                                  item.product.id,
+                                  item.quantity + 1,
+                                );
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-
-            // Botón eliminar
-            Column(
-              children: [
-                IconButton(
-                  icon: const Icon(Iconsax.trash, color: Colors.red),
-                  onPressed: () {
-                    cartNotifier.removeProduct(item.product.id);
-                    _showRemovedSnackBar(context, item.product.title);
-                  },
                 ),
-                SizedBox(height: 16),
-                IconButton(
-                  icon: const Icon(Iconsax.location, color: Colors.green),
-                  onPressed: () {},
+
+                // Botón eliminar
+                Column(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Iconsax.trash, color: Colors.red),
+                      onPressed: () {
+                        cartNotifier.removeProduct(item.product.id);
+                        _showRemovedSnackBar(context, item.product.title);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    IconButton(
+                      icon: const Icon(Iconsax.location, color: Colors.green),
+                      onPressed: () {},
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -306,7 +302,11 @@ class NotificationScreen extends ConsumerWidget {
             onPressed: () {
               cartNotifier.clearCart();
               Navigator.pop(context);
-              _showClearedSnackBar(context);
+              showSnackBar(
+                context,
+                'Carrito vaciado',
+                type: SnackBarType.warning,
+              );
             },
             child: const Text('Vaciar', style: TextStyle(color: Colors.red)),
           ),
@@ -359,25 +359,86 @@ class NotificationScreen extends ConsumerWidget {
     CartNotifier cartNotifier,
     WidgetRef ref,
   ) async {
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Procesando compra...'),
+          ],
+        ),
+      ),
+    );
+
     try {
-      final purchase = cartNotifier.checkout();
-      // Guardar la orden en el provider de compras
-      final purchasesNotifier = ref.read(purchasesProvider.notifier);
-      purchasesNotifier.addPurchase(purchase);
-      // Mostrar mensaje de éxito
-      _showOrderConfirmedSnackBar(context);
-      Navigator.pushNamed(context, 'mis_compras');
-    } catch (e) {
-      if (context.mounted) {
-        _showCheckoutErrorSnackBar(context);
+      //  Validaciones
+      if (cartNotifier.state.isEmpty) {
+        navigator.pop();
+        _showCheckoutErrorSnackBar(context, 'El carrito está vacío');
+        return;
       }
+
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        navigator.pop();
+        _showCheckoutErrorSnackBar(context, 'No estás autenticado');
+        return;
+      }
+
+      // Crear compra
+      final purchase = cartNotifier.checkout();
+
+      // Guardar compra
+      final purchaseService = ref.read(purchaseServiceProvider);
+      final result = await purchaseService.savePurchase(purchase);
+      navigator.pop();
+
+      // Procesar resultado
+      if (result == 'success') {
+        cartNotifier.completeCheckout();
+        navigator.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => MyPurchasesScreen()),
+          (route) => false,
+        );
+      } else {
+        _showCheckoutErrorDialog(context, 'Error al realizar la compra');
+      }
+    } catch (e) {
+      debugPrint('$e');
+      try {
+        navigator.pop();
+      } catch (_) {}
     }
   }
 
-  void _showCheckoutErrorSnackBar(BuildContext context) {
+
+
+  // --- Diálogo de error ---
+  void _showCheckoutErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Error en la compra'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCheckoutErrorSnackBar(BuildContext context, String error) {
     showSnackBar(
       context,
-      'Error al procesar la compra. Intenta nuevamente.',
+      'Error al procesar la compra',
       type: SnackBarType.error,
     );
   }
@@ -387,18 +448,6 @@ class NotificationScreen extends ConsumerWidget {
       context,
       '$productName removido del carrito',
       type: SnackBarType.warning,
-    );
-  }
-
-  void _showClearedSnackBar(BuildContext context) {
-    showSnackBar(context, 'Carrito vaciado', type: SnackBarType.warning);
-  }
-
-  void _showOrderConfirmedSnackBar(BuildContext context) {
-    showSnackBar(
-      context,
-      '¡Pedido confirmado! Gracias por tu compra.',
-      type: SnackBarType.success,
     );
   }
 }
