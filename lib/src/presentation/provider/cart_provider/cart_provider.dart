@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // AÑADIR IMPORT
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -37,7 +38,11 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     _loadCartFromPrefs();
   }
 
-  static const String _cartKey = 'shopping_cart';
+  String get _cartKey {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    return 'shopping_cart_$userId';
+  }
 
   // Cargar carrito desde SharedPreferences
   Future<void> _loadCartFromPrefs() async {
@@ -52,15 +57,16 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
             .toList();
 
         state = loadedCart;
-        debugPrint('Carrito cargado: ${loadedCart.length} productos');
       } else {
-        debugPrint('No hay datos previos del carrito');
         state = [];
       }
     } catch (e) {
-      debugPrint('Error cargando carrito: $e');
       state = [];
     }
+  }
+
+  void onUserChanged() {
+    _loadCartFromPrefs();
   }
 
   // Guardar carrito en SharedPreferences
@@ -69,27 +75,42 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       final prefs = await SharedPreferences.getInstance();
       final cartJson = json.encode(state.map((item) => item.toMap()).toList());
       await prefs.setString(_cartKey, cartJson);
-      debugPrint('Carrito guardado: ${state.length} productos');
     } catch (e) {
       debugPrint('Error guardando carrito: $e');
     }
   }
 
-  // Método para realizar checkout y crear una compra
+  // MÉTODO CHECKOUT
   PurchaseModel checkout() {
+    debugPrint('=== CHECKOUT INICIADO ===');
+
     if (state.isEmpty) {
+      debugPrint('ERROR: El carrito está vacío');
       throw Exception('El carrito está vacío');
     }
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint('ERROR: Usuario no autenticado');
+      throw Exception('Usuario no autenticado');
+    }
+
+    // Crear la compra
     final purchase = PurchaseModel.fromCart(
-      userId: 'current_user', //ID fijo por ahora
-      cartItems: List.from(state), // Copia de los items actuales
+      userId: user.uid,
+      cartItems: List.from(state),
     );
-
-    // Limpiar el carrito después del checkout
-    clearCart();
-
     return purchase;
+  }
+
+  // Método para limpiar después del éxito
+  void completeCheckout() {
+    clearCart();
+  }
+
+  void clearCart() {
+    state = [];
+    _saveCartToPrefs();
   }
 
   void addProduct(ProductModel product) {
@@ -110,7 +131,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   }
 
   void removeProduct(int productId) {
-    final productName = state
+    state
         .firstWhere(
           (item) => item.product.id == productId,
           orElse: () => CartItem(
@@ -131,9 +152,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         .title;
 
     state = state.where((item) => item.product.id != productId).toList();
-    debugPrint(
-      'Producto removido: $productName, productos restantes: ${state.length}',
-    );
     _saveCartToPrefs();
   }
 
@@ -169,11 +187,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       return item;
     }).toList();
 
-    _saveCartToPrefs();
-  }
-
-  void clearCart() {
-    state = [];
     _saveCartToPrefs();
   }
 
@@ -235,4 +248,26 @@ final cartTotalPriceProvider = Provider<double>((ref) {
 final cartIsEmptyProvider = Provider<bool>((ref) {
   final cartItems = ref.watch(cartItemsProvider);
   return cartItems.isEmpty;
+});
+
+// Provider para observar cambios de usuario y actualizar carrito
+final cartAuthObserverProvider = Provider((ref) {
+  final auth = FirebaseAuth.instance;
+  final cartNotifier = ref.read(cartItemsProvider.notifier);
+
+  // Escuchar cambios de autenticación
+  auth.authStateChanges().listen((user) {
+    if (user != null) {
+      debugPrint('Cart: Usuario cambiado a: ${user.email} (${user.uid})');
+      debugPrint(' Cart: Key actual: shopping_cart_${user.uid}');
+    } else {
+      debugPrint('Cart: Usuario desconectado');
+      debugPrint('Cart: Key actual: shopping_cart_anonymous');
+    }
+
+    // Recargar carrito para el nuevo usuario
+    cartNotifier.onUserChanged();
+  });
+
+  return null;
 });

@@ -1,75 +1,52 @@
-// purchases_provider.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/legacy.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shop_agence/src/data/data_source/services/purchase_services.dart';
 import 'package:shop_agence/src/data/models/purchase_model.dart';
 
-final purchasesProvider =
-    StateNotifierProvider<PurchasesNotifier, List<PurchaseModel>>((ref) {
-      return PurchasesNotifier();
-    });
+// Provider para auth state 
+final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
+  return FirebaseAuth.instance;
+});
 
-class PurchasesNotifier extends StateNotifier<List<PurchaseModel>> {
-  PurchasesNotifier() : super([]) {
-    _loadPurchases();
-  }
+final authStateChangesProvider = StreamProvider<User?>((ref) {
+  final auth = ref.watch(firebaseAuthProvider);
+  return auth.authStateChanges();
+});
 
-  static const String _purchasesKey = 'user_purchases';
+// Provider para el servicio
+final purchaseServiceProvider = Provider<PurchaseService>((ref) {
+  return PurchaseService();
+});
 
-  Future<void> _loadPurchases() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final purchasesJson = prefs.getString(_purchasesKey);
+// Provider para las compras del usuario ACTUAL (reactivo)
+final userPurchasesProvider = StreamProvider.autoDispose<List<PurchaseModel>>((
+  ref,
+) {
+  //  Observar cambios en el usuario
+  final authState = ref.watch(authStateChangesProvider);
 
-      if (purchasesJson != null && purchasesJson.isNotEmpty) {
-        final List<dynamic> purchasesData = json.decode(purchasesJson);
-        final List<PurchaseModel> loadedPurchases = purchasesData
-            .map(
-              (purchase) =>
-                  PurchaseModel.fromJson(purchase as Map<String, dynamic>),
-            )
-            .toList();
-
-        state = loadedPurchases;
-      } else {
-        state = [];
+  return authState.when(
+    data: (user) {
+      if (user == null) {
+        debugPrint(' No hay usuario autenticado');
+        return Stream.value([]);
       }
-    } catch (e) {
-      state = [];
-    }
-  }
-
-  Future<void> _savePurchases() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final purchasesJson = json.encode(
-        state.map((purchase) => purchase.toJson()).toList(),
+      debugPrint(
+        'Iniciando consulta de compras para: ${user.uid} (${user.email})',
       );
-      await prefs.setString(_purchasesKey, purchasesJson);
-    } catch (e) {
-      debugPrint('Error guardando compras: $e');
-    }
-  }
+      // Obtener servicio
+      final purchaseService = ref.read(purchaseServiceProvider);
 
-  void addPurchase(PurchaseModel purchase) {
-    state = [purchase, ...state]; // Agregar al inicio de la lista
-    _savePurchases();
-  }
-
-  // Obtener compras ordenadas por fecha (más reciente primero)
-  List<PurchaseModel> get sortedPurchases {
-    return List.from(state)
-      ..sort((a, b) => b.purchaseDate.compareTo(a.purchaseDate));
-  }
-
-  // Obtener el total gastado
-  double get totalSpent {
-    return state.fold(0.0, (sum, order) => sum + order.totalPrice);
-  }
-
-  // Obtener número total de compras
-  int get totalPurchases {
-    return state.length;
-  }
-}
+      // Usar el método que acepta userId como parámetro
+      return purchaseService.getPurchasesByUserId(user.uid);
+    },
+    loading: () {
+      return Stream.value([]);
+    },
+    error: (error, stack) {
+      debugPrint('Error en autenticación: $error');
+      return Stream.value([]);
+    },
+  );
+});
