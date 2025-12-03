@@ -154,3 +154,72 @@ class CustomPrimaryButton extends StatelessWidget {
     );
   }
 }
+
+class SocialButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final bool isLoading;
+  final String iconAsset;
+  final String text;
+  final Color iconBackgroundColor;
+  final Color textColor;
+  final Color loadingColor;
+  final double height;
+  final double? width;
+  final bool alignCenter;
+
+  const SocialButton({
+    super.key,
+    required this.onPressed,
+    required this.isLoading,
+    required this.iconAsset,
+    required this.text,
+    this.iconBackgroundColor = Colors.white,
+    this.textColor = Colors.black,
+    this.loadingColor = Colors.blue,
+    this.height = 50,
+    this.width,
+    this.alignCenter = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = SizedBox(
+      width: width ?? double.infinity,
+      height: height,
+      child: isLoading
+          ? Center(child: CircularProgressIndicator(color: loadingColor))
+          : ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: iconBackgroundColor,
+                foregroundColor: textColor,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: Colors.grey.shade300, width: 1),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(iconAsset, height: 24, width: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+
+    return alignCenter
+        ? Align(alignment: Alignment.center, child: button)
+        : button;
+  }
+}

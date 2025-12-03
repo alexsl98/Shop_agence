@@ -7,6 +7,7 @@ import 'package:shop_agence/src/core/utils/validator_pass.dart';
 import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
 import 'package:shop_agence/src/data/data_source/services/facebook_auth_services.dart';
 import 'package:shop_agence/src/data/data_source/services/google_auth_services.dart';
+import 'package:shop_agence/src/data/models/user_model.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/screens/home_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_button.dart';
@@ -47,25 +48,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _isLoading = true;
     });
 
-    String res = await AuthMethod().loginUser(
-      email: _emailController.text,
-      password: _passController.text,
-    );
-
-    if (res == "success") {
-      setState(() {
-        _isLoading = false;
-      });
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+    try {
+      // Ahora loginUser devuelve UserModel, no String
+      UserModel user = await AuthMethod().loginUser(
+        email: _emailController.text,
+        password: _passController.text,
       );
-    } else {
+
       setState(() {
         _isLoading = false;
       });
-      showSnackBar(context, res);
+
+      // Mostrar mensaje de bienvenida
+      showSnackBar(
+        context,
+        '¡Bienvenido ${user.name}!',
+        type: SnackBarType.success,
+      );
+
+      // Navegar al home screen, puedes pasar el usuario si lo necesitas
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } on Exception catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring(11);
+      }
+      showSnackBar(context, errorMessage, type: SnackBarType.error);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      showSnackBar(
+        context,
+        'Error desconocido al iniciar sesión',
+        type: SnackBarType.error,
+      );
     }
   }
+
 
   Future<void> _handleGoogleSignIn() async {
     setState(() {
@@ -83,30 +108,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('¡Bienvenido ${user.displayName ?? user.email}!'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
+        showSnackBar(
+          context,
+          '¡Bienvenido ${user.displayName ?? user.email}!',
+          type: SnackBarType.success,
         );
       } else {
         setState(() {
           _isGoogleLoading = false;
         });
         print('Flujo cancelado por el usuario');
-        // No mostramos snackbar porque cancelar es comportamiento normal
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _isGoogleLoading = false;
       });
-      showSnackBar(context, 'Error de autenticación con Firebase');
+      showSnackBar(
+        context,
+        'Ocurrio un error inesperado. Revise su conexión e intente nuevamente.',
+        type: SnackBarType.error,
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-      showSnackBar(context, 'Error al iniciar sesión con Google');
+      showSnackBar(
+        context,
+        'Error al iniciar sesión con Google',
+        type: SnackBarType.error,
+      );
     }
   }
 
@@ -126,14 +156,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '¡Bienvenido ${userCredential.user ?? userCredential.user ?? 'Usuario'}!',
-            ),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
+        showSnackBar(
+          context,
+          '¡Bienvenido ${userCredential.user ?? userCredential.credential}!',
+          type: SnackBarType.success,
         );
       } else {
         setState(() {
@@ -147,13 +173,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       });
       showSnackBar(
         context,
-        'Error de autenticación con Firebase: ${e.message}',
+        'Error de autenticación con Firebase',
+        type: SnackBarType.error
       );
     } catch (e) {
       setState(() {
         _isFacebookLoading = false;
       });
-      showSnackBar(context, 'Error al iniciar sesión con Facebook');
+      showSnackBar(
+        context,
+        'Error al iniciar sesión con Facebook',
+        type: SnackBarType.error,
+      );
     }
   }
 
@@ -260,10 +291,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(
-                        context,
-                        'forgot_password',
-                      );
+                      Navigator.pushNamed(context, 'forgot_password');
                     },
                     child: Text(
                       '¿Olvidaste tu contraseña?',
@@ -286,7 +314,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 16),
 
-                // Separador "O"
                 Row(
                   children: [
                     Expanded(
@@ -320,92 +347,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 // Botón Google
-                Align(
-                  alignment: Alignment.center,
-                  child: _isGoogleLoading
-                      ? CircularProgressIndicator(color: appTheme.pinkColor)
-                      : ElevatedButton(
-                          onPressed: _handleGoogleSignIn,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 1,
-                              ),
-                            ),
-                            minimumSize: const Size(double.infinity, 50),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                'assets/google_icon.png',
-                                height: 24,
-                                width: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Continuar con Google',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                SocialButton(
+                  onPressed: _handleGoogleSignIn,
+                  isLoading: _isGoogleLoading,
+                  iconAsset: 'assets/google_icon.png',
+                  text: 'Continuar con Google',
+                  textColor: Colors.grey.shade800,
+                  loadingColor: appTheme.pinkColor,
                 ),
 
                 const SizedBox(height: 12),
 
-                Align(
-                  alignment: Alignment.center,
-                  child: _isFacebookLoading
-                      ? CircularProgressIndicator(color: appTheme.pinkColor)
-                      : ElevatedButton(
-                          onPressed: () {
-                            _handleFacebookSignIn();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 1,
-                              ),
-                            ),
-                            minimumSize: const Size(double.infinity, 50),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Image.asset(
-                                'assets/facebook_icon.png',
-                                height: 24,
-                                width: 24,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Continuar con Facebook',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.blue.shade800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                // Botón de Facebook
+                SocialButton(
+                  onPressed: _handleFacebookSignIn,
+                  isLoading: _isFacebookLoading,
+                  iconAsset: 'assets/facebook_icon.png',
+                  text: 'Continuar con Facebook',
+                  textColor: Colors.blue.shade800,
+                  loadingColor: appTheme.pinkColor,
                 ),
 
                 const SizedBox(height: 12),

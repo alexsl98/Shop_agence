@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:shop_agence/src/core/theme/app_theme.dart';
 import 'package:shop_agence/src/core/utils/validator_pass.dart';
 import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
+import 'package:shop_agence/src/data/models/user_model.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/forms/custom_button.dart';
@@ -40,30 +41,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) return;
+
     setState(() {
       _isLoading = true;
     });
-    // signup user using our authmethod
-    String res = await AuthMethod().signupUser(
-      email: _emailController.text,
-      password: _passwordController.text,
-      address: _addressController.text,
-      name: _nameController.text,
-    );
-    if (res == "success") {
+
+    try {
+      UserModel newUser = UserModel(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        address: _addressController.text.trim(),
+        name: _nameController.text.trim(),
+      );
+
+      await AuthMethod().signupUser(newUser);
+
       setState(() {
         _isLoading = false;
       });
-      //navigate to the next screen
+
+      showSnackBar(
+        context,
+        '¡Usuario registrado exitosamente!',
+        type: SnackBarType.success,
+      );
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
-    } else {
+    } on Exception catch (e) {
       setState(() {
         _isLoading = false;
       });
-      // show error
-      showSnackBar(context, res);
+
+      showSnackBar(context, e.toString(), type: SnackBarType.error);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      showSnackBar(
+        context,
+        'Ocurrió un error inesperado. Revise su conexión e intente nuevamente.',
+        type: SnackBarType.error,
+      );
     }
   }
 

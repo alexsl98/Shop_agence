@@ -1,7 +1,7 @@
 import 'package:shop_agence/src/domain/entity/product_entity.dart';
 
-class ProductoModel extends ProductoEntity {
-  ProductoModel({
+class ProductModel extends ProductoEntity {
+  ProductModel({
     required super.id,
     required super.title,
     required super.price,
@@ -12,8 +12,8 @@ class ProductoModel extends ProductoEntity {
     required super.count,
   });
 
-  factory ProductoModel.fromJson(Map<String, dynamic> json) {
-    return ProductoModel(
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
       id: json['id'],
       title: json['title'],
       price: (json['price'] as num).toDouble(),
