@@ -1,4 +1,3 @@
-// purchase_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,46 +7,27 @@ class PurchaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // ==================== GUARDAR COMPRA ====================
+  // GUARDAR COMPRA 
   Future<String> savePurchase(PurchaseModel purchase) async {
     try {
-      debugPrint('=== INICIANDO savePurchase() ===');
-
       final user = _auth.currentUser;
-      debugPrint('Usuario actual: ${user?.uid}');
-      debugPrint('Usuario en compra: ${purchase.userId}');
 
       if (user == null) {
-        debugPrint('ERROR: Usuario no autenticado');
         throw Exception('Usuario no autenticado');
       }
-
-      // Verificar que la compra pertenezca al usuario actual
       if (purchase.userId != user.uid) {
-        debugPrint('ERROR: La compra no pertenece al usuario actual');
         throw Exception('La compra no pertenece al usuario actual');
       }
-
-      debugPrint('Verificando/Creando usuario en Firestore...');
 
       // Verificar si el usuario existe, si no, crearlo
       final userDoc = await _firestore.collection('users').doc(user.uid).get();
       if (!userDoc.exists) {
-        debugPrint('Creando documento de usuario para ${user.uid}');
         await _firestore.collection('users').doc(user.uid).set({
           'uid': user.uid,
           'email': user.email,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
-
-      debugPrint('Guardando compra ${purchase.id}...');
-      debugPrint('Detalles de la compra:');
-      debugPrint('- ID: ${purchase.id}');
-      debugPrint('- Total: \$${purchase.totalPrice}');
-      debugPrint('- Items: ${purchase.items.length}');
-      debugPrint('- Fecha: ${purchase.purchaseDate}');
-      debugPrint('- Estado: ${purchase.status}');
 
       // Guardar la compra en Firestore usando tu modelo
       await _firestore
@@ -56,26 +36,19 @@ class PurchaseService {
           .collection('purchases')
           .doc(purchase.id)
           .set(purchase.toJson());
-
-      debugPrint('✅ Compra guardada exitosamente en Firestore');
       return 'success';
     } catch (e) {
-      debugPrint('❌ ERROR en savePurchase(): $e');
-      debugPrint('Stack trace: ${e.toString()}');
-      return 'Error: $e';
+      return 'Error';
     }
   }
 
-  // ==================== OBTENER COMPRAS DEL USUARIO ====================
+  //OBTENER COMPRAS DEL USUARIO 
   Stream<List<PurchaseModel>> getUserPurchases() {
     final user = _auth.currentUser;
 
     if (user == null) {
-      debugPrint('Usuario no autenticado, retornando stream vacío');
       return const Stream.empty();
     }
-
-    debugPrint('Obteniendo compras para usuario: ${user.uid}');
 
     return _firestore
         .collection('users')
@@ -84,16 +57,12 @@ class PurchaseService {
         .orderBy('purchaseDate', descending: true)
         .snapshots()
         .map((snapshot) {
-          debugPrint('Compras recibidas: ${snapshot.docs.length} documentos');
 
           return snapshot.docs.map((doc) {
             final data = doc.data();
             try {
-              // Usar tu PurchaseModel.fromJson()
               return PurchaseModel.fromJson({'id': doc.id, ...data});
             } catch (e) {
-              debugPrint('Error convirtiendo documento ${doc.id}: $e');
-              debugPrint('Datos del documento: $data');
               // Retornar una compra vacía en caso de error
               return PurchaseModel(
                 id: doc.id,
@@ -108,7 +77,7 @@ class PurchaseService {
         });
   }
 
-  // ==================== OBTENER ESTADÍSTICAS ====================
+  // OBTENER ESTADÍSTICAS 
   Future<PurchaseStats> getUserPurchaseStats() async {
     try {
       debugPrint('=== OBTENIENDO ESTADÍSTICAS DE COMPRAS ===');
@@ -160,20 +129,14 @@ class PurchaseService {
         totalProducts: totalProducts,
       );
 
-      debugPrint('Estadísticas calculadas:');
-      debugPrint('- Total compras: ${stats.totalPurchases}');
-      debugPrint('- Total items (cantidad): ${stats.totalItems}');
-      debugPrint('- Total productos (diferentes): ${stats.totalProducts}');
-      debugPrint('- Total gastado: \$${stats.totalSpent}');
-
       return stats;
     } catch (e) {
-      debugPrint('❌ ERROR en getUserPurchaseStats: $e');
+      debugPrint('ERROR en getUserPurchaseStats: $e');
       rethrow;
     }
   }
 
-  // ==================== OBTENER UNA COMPRA ESPECÍFICA ====================
+  // OBTENER UNA COMPRA ESPECÍFICA
   Future<PurchaseModel?> getPurchaseById(String purchaseId) async {
     try {
       final user = _auth.currentUser;
@@ -197,7 +160,7 @@ class PurchaseService {
   }
 
   Stream<List<PurchaseModel>> getPurchasesByUserId(String userId) {
-    debugPrint('🔍 getPurchasesByUserId llamado para: $userId');
+    debugPrint('getPurchasesByUserId llamado para: $userId');
 
     return _firestore
         .collection('users')
@@ -206,15 +169,11 @@ class PurchaseService {
         .orderBy('purchaseDate', descending: true)
         .snapshots()
         .map((snapshot) {
-          debugPrint(
-            '📄 ${snapshot.docs.length} compras encontradas para userId: $userId',
-          );
 
           return snapshot.docs.map((doc) {
             try {
               return PurchaseModel.fromJson({'id': doc.id, ...doc.data()});
             } catch (e) {
-              debugPrint('❌ Error convirtiendo documento ${doc.id}: $e');
               return PurchaseModel(
                 id: doc.id,
                 userId: userId,
@@ -228,7 +187,7 @@ class PurchaseService {
         });
   }
 
-  // ==================== ACTUALIZAR ESTADO DE COMPRA ====================
+  // ACTUALIZAR ESTADO DE COMPRA
   Future<String> updatePurchaseStatus(
     String purchaseId,
     String newStatus,
@@ -249,12 +208,11 @@ class PurchaseService {
 
       return 'success';
     } catch (e) {
-      debugPrint('Error actualizando estado: $e');
       return e.toString();
     }
   }
 
-  // ==================== ELIMINAR COMPRA ====================
+  //ELIMINAR COMPRA 
   Future<String> deletePurchase(String purchaseId) async {
     try {
       final user = _auth.currentUser;
@@ -274,7 +232,7 @@ class PurchaseService {
     }
   }
 
-  // ==================== OBTENER COMPRAS RECIENTES ====================
+  //  OBTENER COMPRAS RECIENTES 
   Stream<List<PurchaseModel>> getRecentPurchases({int limit = 5}) {
     final user = _auth.currentUser;
 
@@ -296,7 +254,7 @@ class PurchaseService {
         });
   }
 
-  // ==================== OBTENER COMPRAS POR RANGO DE FECHAS ====================
+  //OBTENER COMPRAS POR RANGO DE FECHAS 
   Future<List<PurchaseModel>> getPurchasesByDateRange({
     required DateTime startDate,
     required DateTime endDate,
@@ -330,12 +288,12 @@ class PurchaseService {
   }
 }
 
-// ==================== MODELO DE ESTADÍSTICAS ====================
+// MODELO DE ESTADÍSTICAS 
 class PurchaseStats {
   final int totalPurchases;
   final double totalSpent;
-  final int totalItems; // Cantidad total de unidades
-  final int totalProducts; // Número de productos diferentes
+  final int totalItems; 
+  final int totalProducts; 
 
   PurchaseStats({
     required this.totalPurchases,
@@ -343,8 +301,6 @@ class PurchaseStats {
     required this.totalItems,
     required this.totalProducts,
   });
-
-  // Constructor vacío para casos de error
   factory PurchaseStats.empty() {
     return PurchaseStats(
       totalPurchases: 0,
@@ -364,7 +320,6 @@ class PurchaseStats {
   double get averageProductsPerPurchase =>
       totalPurchases > 0 ? totalProducts / totalPurchases : 0.0;
 
-  // Conversión a JSON
   Map<String, dynamic> toJson() {
     return {
       'totalPurchases': totalPurchases,
@@ -376,8 +331,7 @@ class PurchaseStats {
       'averageProductsPerPurchase': averageProductsPerPurchase,
     };
   }
-
-  // Para mostrar en UI
+  
   String get formattedTotalSpent => '\$${totalSpent.toStringAsFixed(2)}';
   String get formattedAveragePerPurchase =>
       '\$${averagePerPurchase.toStringAsFixed(2)}';

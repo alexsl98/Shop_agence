@@ -1,4 +1,3 @@
-// lib/domain/entities/purchase_entity.dart
 class PurchaseEntity {
   final String id;
   final String userId;

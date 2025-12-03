@@ -12,7 +12,6 @@ class PurchaseModel extends PurchaseEntity {
     required super.status,
   });
 
-  // Constructor para crear desde el carrito
   factory PurchaseModel.fromCart({
     required String userId,
     required List<CartItem> cartItems,
@@ -36,7 +35,6 @@ class PurchaseModel extends PurchaseEntity {
     );
   }
 
-  // Conversión desde JSON/Map
   factory PurchaseModel.fromJson(Map<String, dynamic> json) {
     return PurchaseModel(
       id: json['id'],
@@ -51,7 +49,6 @@ class PurchaseModel extends PurchaseEntity {
     );
   }
 
-  // Conversión a JSON/Map
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -77,7 +74,6 @@ class PurchaseItemModel extends PurchaseItemEntityList {
     required super.totalPrice,
   });
 
-  // Constructor desde CartItem
   factory PurchaseItemModel.fromCartItem(CartItem cartItem) {
     return PurchaseItemModel(
       productId: cartItem.product.id.toString(),
@@ -90,7 +86,6 @@ class PurchaseItemModel extends PurchaseItemEntityList {
     );
   }
 
-  // Constructor desde ProductModel
   factory PurchaseItemModel.fromProduct(
     ProductModel product, {
     int quantity = 1,
@@ -106,7 +101,6 @@ class PurchaseItemModel extends PurchaseItemEntityList {
     );
   }
 
-  // Conversión desde JSON/Map
   factory PurchaseItemModel.fromJson(Map<String, dynamic> json) {
     return PurchaseItemModel(
       productId: json['productId'],
@@ -119,7 +113,6 @@ class PurchaseItemModel extends PurchaseItemEntityList {
     );
   }
 
-  // Conversión a JSON/Map
   Map<String, dynamic> toJson() {
     return {
       'productId': productId,

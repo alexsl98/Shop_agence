@@ -8,6 +8,7 @@ import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provi
 import 'package:shop_agence/src/data/data_source/services/auth_services.dart';
 import 'package:shop_agence/src/data/data_source/services/google_auth_services.dart';
 import 'package:shop_agence/src/presentation/screens/auth/login_screen.dart';
+import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class CustomDrawer extends ConsumerWidget {
   const CustomDrawer({super.key});
@@ -174,7 +175,7 @@ class CustomDrawer extends ConsumerWidget {
       builder: (_) => AlertDialog(
         backgroundColor: theme.cardColor,
         title: Text(
-          'Cerrar Sesión',
+          'Cerrar sesión',
           style: TextStyle(color: theme.colorScheme.onSurface),
         ),
         content: Text(
@@ -191,11 +192,11 @@ class CustomDrawer extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Cerrar diálogo
+              Navigator.pop(context); 
               await _performLogout(context);
             },
             child: Text(
-              'Cerrar Sesión',
+              'Cerrar sesión',
               style: TextStyle(color: theme.colorScheme.error),
             ),
           ),
@@ -205,44 +206,35 @@ class CustomDrawer extends ConsumerWidget {
   }
 
   Future<void> _performLogout(BuildContext context) async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     try {
-      // Mostrar indicador de carga
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // ✅ EJECUTAR AMBOS MÉTODOS DE LOGOUT
+      // EJECUTAR AMBOS MÉTODOS DE LOGOUT
       await AuthMethod().signOut();
       await GoogleAuthServices().signOut();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
 
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('Sesión cerrada exitosamente'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
+      showSnackBar(
+        context,
+        '¡Sesión cerrada exitosamente!',
+        type: SnackBarType.success,
       );
     } catch (e) {
-      print('Error al cerrar sesión: $e');
-
-      // Cerrar el loading si hay error
       if (context.mounted) {
-        Navigator.of(context).pop(); // Cerrar loading
+        Navigator.of(context).pop();
       }
 
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text('Error al cerrar sesión: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
+      showSnackBar(
+        context,
+        'Error al cerrar sesión. Intente nuevamente.',
+        type: SnackBarType.error,
       );
     }
   }

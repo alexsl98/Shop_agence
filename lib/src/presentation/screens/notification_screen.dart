@@ -7,6 +7,7 @@ import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/screens/map_details_screen.dart';
 import 'package:shop_agence/src/presentation/screens/my_purchase_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
@@ -22,9 +23,13 @@ class NotificationScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Mi Carrito',
-          style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+        title: Row(
+          children: [
+            Text(
+              'Mi Carrito',
+              style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+            ),
+          ],
         ),
         actions: [
           if (cartItems.isNotEmpty)
@@ -117,9 +122,9 @@ class NotificationScreen extends ConsumerWidget {
                     children: [
                       Text(
                         item.product.title,
-                        style: const TextStyle(
+                        style:  TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: Colors.grey[600],
                           fontSize: 14,
                         ),
                         maxLines: 2,
@@ -211,7 +216,12 @@ class NotificationScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     IconButton(
                       icon: const Icon(Iconsax.location, color: Colors.green),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MapScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -415,8 +425,6 @@ class NotificationScreen extends ConsumerWidget {
       } catch (_) {}
     }
   }
-
-
 
   // --- Diálogo de error ---
   void _showCheckoutErrorDialog(BuildContext context, String message) {

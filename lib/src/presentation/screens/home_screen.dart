@@ -126,9 +126,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
         ],
-        title: Text(
-          "Home",
-          style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+        title: Row(
+          children: [
+            Text(
+              "Home",
+              style: textAppBar.copyWith(color: appTheme.drawerForegroundColor),
+            ),
+          ],
         ),
       ),
       drawer: const CustomDrawer(),

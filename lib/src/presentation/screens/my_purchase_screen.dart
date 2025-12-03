@@ -9,6 +9,7 @@ import 'package:shop_agence/src/data/models/purchase_model.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart'; // Actualizado
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
 import 'package:shop_agence/src/presentation/widgets/custom_drawer.dart';
+import 'package:shop_agence/src/presentation/widgets/custom_shimmer.dart';
 import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
 
 class MyPurchasesScreen extends ConsumerWidget {
@@ -42,34 +43,20 @@ class MyPurchasesScreen extends ConsumerWidget {
             onPressed: () {
               _showPurchaseSummary(context, ref);
             },
-            tooltip: 'Resumen de compras',
           ),
         ],
       ),
       drawer: const CustomDrawer(),
       body: purchasesAsync.when(
-        loading: () => _buildLoadingState(),
+        loading: () => ProductShimmerCard(),
         error: (error, stack) =>
-            _buildErrorState(context, ref, error.toString()), 
+            _buildErrorState(context, ref, error.toString()),
         data: (purchases) {
           if (purchases.isEmpty) {
             return _buildEmptyPurchases(context);
           }
           return _buildPurchasesList(purchases, ref);
         },
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Cargando tus compras...'),
-        ],
       ),
     );
   }
@@ -221,6 +208,9 @@ class MyPurchasesScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             itemCount: purchases.length,
             itemBuilder: (context, index) {
+              if (index == purchases.length) {
+                return const ProductShimmerCard();
+              }
               final purchase = purchases[index];
               return _buildPurchaseCard(purchase, context);
             },
@@ -464,6 +454,7 @@ class MyPurchasesScreen extends ConsumerWidget {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: Theme.of(context).cardColor,
           title: const Text('Resumen de Compras'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -501,13 +492,17 @@ class MyPurchasesScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar'),
+              child: Text('Cerrar', style: TextStyle(color: Colors.red[600])),
             ),
           ],
         ),
       );
     } catch (e) {
-      showSnackBar(context, 'Error al cargar estadísticas', type: SnackBarType.error);
+      showSnackBar(
+        context,
+        'Error al cargar estadísticas',
+        type: SnackBarType.error,
+      );
     }
   }
 

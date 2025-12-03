@@ -18,11 +18,11 @@ class ProductService {
         return jsonResponse.map((data) => ProductModel.fromJson(data)).toList();
       } else {
         throw Exception(
-          'Failed to load products. Status code: ${response.statusCode}',
+          'Ocurrio un error al cargar los productos.',
         );
       }
     } catch (e) {
-      throw Exception('Failed to load products: $e');
+      throw Exception('Ocurrio un error al cargar los productos. Revise su conexiòn a internet');
     }
   }
 
@@ -42,8 +42,7 @@ class ProductService {
       end > allProducts.length ? allProducts.length : end,
     );
   }
-
-  // Opcional: Método para obtener un producto por ID
+  
   Future<ProductModel> getProductById(int id) async {
     try {
       final response = await client.get(Uri.parse('$_baseUrl/products/$id'));

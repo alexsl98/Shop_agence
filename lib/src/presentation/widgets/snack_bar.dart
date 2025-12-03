@@ -9,7 +9,6 @@ void showSnackBar(
   Duration? duration,
   SnackBarAction? action,
 }) {
-  // Definir colores según el tipo
   Color backgroundColor;
   Color textColor;
 
