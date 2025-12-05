@@ -7,6 +7,7 @@ import 'package:shop_agence/src/core/theme/text_styles.dart';
 import 'package:shop_agence/src/presentation/provider/cart_provider/cart_provider.dart';
 import 'package:shop_agence/src/presentation/provider/purchase_provider/purchases_provider.dart';
 import 'package:shop_agence/src/presentation/provider/theme_provider/theme_provider.dart';
+import 'package:shop_agence/src/presentation/screens/map_detail_screen_test_openstreetmap.dart';
 import 'package:shop_agence/src/presentation/screens/map_details_screen.dart';
 import 'package:shop_agence/src/presentation/screens/my_purchase_screen.dart';
 import 'package:shop_agence/src/presentation/widgets/snack_bar.dart';
@@ -219,7 +220,9 @@ class NotificationScreen extends ConsumerWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => MapScreen()),
+                          MaterialPageRoute(
+                            builder: (context) => MapScreenTest(),
+                          ),
                         );
                       },
                     ),
