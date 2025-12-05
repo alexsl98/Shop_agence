@@ -209,7 +209,7 @@ class AppTheme {
         margin: EdgeInsets.zero,
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: pink, 
+        backgroundColor: green, 
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
